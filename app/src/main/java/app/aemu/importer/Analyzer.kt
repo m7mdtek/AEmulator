@@ -154,7 +154,7 @@ class Analyzer(private val ctx: Context, private val paths: VmPaths, private val
             p["ro.build.display.id"]?.contains("Flyme", true) == true -> "Flyme"
             p.containsKey("ro.build.version.emui") -> "EMUI"
             p.containsKey("ro.build.version.opporom") -> "ColorOS"
-            (p["ro.product.brand"] ?: "").lowercase() == "google" || p["ro.build.tags"]?.contains("release-keys") == true && man.contains("samsung") && !has("system/framework/twframework.jar") && !has("system/app/TwLauncher.apk") && !has("system/app/SecLauncher2.apk") -> "AOSP"
+            (p["ro.product.brand"] ?: "").lowercase() == "google" || p["ro.build.tags"]?.contains("release-keys") == true && man.contains("samsung") && !has("system/framework/twframework.jar") && !has("system/framework/sec_framework.jar") -> "AOSP"
             has("system/framework/twframework.jar") || has("system/app/TwLauncher.apk") || has("system/app/TwLauncher") || has("system/app/SecLauncher2.apk") || man.contains("samsung") -> "TouchWiz"
             man.contains("htc") || has("system/framework/com.htc.framework.jar") || has("system/framework/HTCExtension.jar") -> "HTC Sense"
             man.contains("motorola") -> "MOTOBLUR"
@@ -221,11 +221,11 @@ class Analyzer(private val ctx: Context, private val paths: VmPaths, private val
         val names = fw.listFiles()?.map { it.name }?.toSet() ?: emptySet()
         val aosp = when {
             api <= 10 -> listOf("core.jar", "bouncycastle.jar", "ext.jar", "framework.jar", "android.policy.jar", "services.jar", "core-junit.jar")
-            api <= 18 -> listOf("core.jar", "core-junit.jar", "bouncycastle.jar", "ext.jar", "framework.jar", "framework2.jar", "telephony-common.jar", "voip-common.jar", "mms-common.jar", "android.policy.jar", "services.jar", "apache-xml.jar", "webviewchromium.jar")
-            api <= 20 -> listOf("core.jar", "conscrypt.jar", "okhttp.jar", "core-junit.jar", "bouncycastle.jar", "ext.jar", "framework.jar", "framework2.jar", "telephony-common.jar", "voip-common.jar", "mms-common.jar", "android.policy.jar", "services.jar", "apache-xml.jar", "webviewchromium.jar")
-            else -> listOf("core-libart.jar", "conscrypt.jar", "okhttp.jar", "core-junit.jar", "bouncycastle.jar", "ext.jar", "framework.jar", "telephony-common.jar", "voip-common.jar", "ims-common.jar", "mms-common.jar", "android.policy.jar", "apache-xml.jar")
+            api <= 18 -> listOf("core.jar", "core-junit.jar", "bouncycastle.jar", "ext.jar", "framework.jar", "framework2.jar", "telephony-common.jar", "voip-common.jar", "mms-common.jar", "android.policy.jar", "services.jar")
+            api <= 20 -> listOf("core.jar", "conscrypt.jar", "okhttp.jar", "core-junit.jar", "bouncycastle.jar", "ext.jar", "framework.jar", "framework2.jar", "telephony-common.jar", "voip-common.jar", "ims-common.jar", "android.policy.jar", "services.jar")
+            else -> listOf("core-libart.jar", "conscrypt.jar", "okhttp.jar", "core-junit.jar", "bouncycastle.jar", "ext.jar", "framework.jar", "telephony-common.jar", "voip-common.jar", "ims-common.jar", "android.policy.jar", "services.jar")
         }.filter { it in names }
-        val vendorHints = listOf("twframework", "secframework", "sec_", "com.htc.", "HTC", "com.motorola", "com.lge", "lge", "semc", "com.sonyericsson", "miui", "com.qualcomm.qcrilhook", "qcom.fmradio", "framework-miui", "framework-ext", "cm.jar")
+        val vendorHints = listOf("twframework", "secframework", "sec_", "com.htc.", "HTC", "com.motorola", "com.lge", "lge", "semc", "com.sonyericsson", "miui", "com.qualcomm.qcrilhook", "qcom.fm")
         val vendor = names.filter { n -> n.endsWith(".jar") && n !in aosp && vendorHints.any { n.startsWith(it) || n.contains(it) } && n != "services.jar" }
         return (aosp + vendor).joinToString(":") { "/system/framework/$it" }
     }
@@ -251,6 +251,11 @@ class Analyzer(private val ctx: Context, private val paths: VmPaths, private val
         add("keyguard.no_require_sim", "1")
         add("ro.radio.noril", "false")
         add("dalvik.vm.stack-trace-file", "/data/anr/traces.txt")
+        add("wifi.interface", "wlan0")
+        add("ro.wifi.interface", "wlan0")
+        add("wifi.direct.interface", "p2p0")
+        add("ro.hardware.wlan", "qemu")
+        add("persist.sys.wifi", "1")
         for ((k, v) in deflt) add(k, v)
         for ((k, v) in build) add(k, v)
         for ((k, v) in rcProps) add(k, v)
@@ -273,3 +278,4 @@ class Analyzer(private val ctx: Context, private val paths: VmPaths, private val
         }
     }
 }
+

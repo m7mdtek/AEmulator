@@ -39,8 +39,9 @@ class GuestRunner(
         }
         cmd += qemu.absolutePath
         cmd += listOf("-L", paths.root.absolutePath, "-0", prog)
-        // Hardcoded WiFi support: add network device to QEMU by default
-        cmd += listOf("-netdev", "user,id=net0", "-device", "e1000,netdev=net0")
+        // Android expects a wireless interface name in its Wi‑Fi stack. We expose it as a default user-mode NIC
+        // and set the guest-side Wi‑Fi property so the firmware treats it as WLAN instead of plain Ethernet.
+        cmd += listOf("-netdev", "user,id=wlan0", "-device", "e1000,netdev=wlan0")
         if (qemuLog || qemuStrace) {
             if (qemuLog) cmd += listOf("-d", "unimp,guest_errors")
             if (qemuStrace) cmd += "-strace"
@@ -88,6 +89,8 @@ class GuestRunner(
         e["DHD_BINDER_LOG"] = File(paths.bin, "binder-warn.log").absolutePath
         e["DHD_CREDS"] = paths.creds.absolutePath
         e["DHD_INPUT"] = paths.inputSock.absolutePath
+        e["DHD_WIFI_IFACE"] = "wlan0"
+        e["DHD_WIFI"] = "1"
         if (singleTouch) e["DHD_INPUT_ST"] = "1"
         if (binderVerbose) e["DHD_BINDER_VERBOSE"] = "1"
         sdcardHost?.let { e["DHD_SDCARD"] = it.absolutePath }
