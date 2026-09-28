@@ -39,6 +39,8 @@ class GuestRunner(
         }
         cmd += qemu.absolutePath
         cmd += listOf("-L", paths.root.absolutePath, "-0", prog)
+        // Hardcoded WiFi support: add network device to QEMU by default
+        cmd += listOf("-netdev", "user,id=net0", "-device", "e1000,netdev=net0")
         if (qemuLog || qemuStrace) {
             if (qemuLog) cmd += listOf("-d", "unimp,guest_errors")
             if (qemuStrace) cmd += "-strace"
